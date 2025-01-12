@@ -9,15 +9,30 @@ import uuid
 from ChromeWebDriver import *
 from Process_data import ProductDataProcessor
 from emailNotification import EmailNotification
+import configparser
+
 # Initialize FastAPI app
 app = FastAPI()
 
-# Configure the paths for storing scraped data
-DATA_FILE = "/Documents/scraped_data.json"
-IMAGE_FOLDER = "/Documents/images/"
+config = configparser.ConfigParser()
+config.read("config.ini")
 
-# Ensure the image folder exists
-os.makedirs(IMAGE_FOLDER, exist_ok=True)
+# Retrieve configurations
+SCRAPING_CONFIG = config["SCRAPING"]
+EMAIL_CONFIG = config["EMAIL"]
+SETTINGS_CONFIG = config["SETTINGS"]
+
+allow_notification_button_xpath = SCRAPING_CONFIG["allow_notification_button_xpath"]
+shop_element_xpath = SCRAPING_CONFIG["shop_element_xpath"]
+PAGINATION_XPATH = SCRAPING_CONFIG["pagination_xpath"]
+
+SMTP_SERVER = EMAIL_CONFIG["smtp_server"]
+PORT = int(EMAIL_CONFIG["port"])
+USERNAME = EMAIL_CONFIG["username"]
+PASSWORD = EMAIL_CONFIG["password"]
+RECIPIENT_EMAIL = EMAIL_CONFIG["recipient_email"]
+
+DATA_FILE = SETTINGS_CONFIG["data_file"]
 
 @app.post("/scrape/")
 async def scrape_catalog(
@@ -29,10 +44,14 @@ async def scrape_catalog(
 
     
     page = 0   
-    allow_notification_button_xpath = '//*[@id="onesignal-slidedown-allow-button"]'
-    shop_element_xpath = '//*[@class="mf-shop-content"]/ul'
-    pagination_xpath = '//*[@class="next page-numbers"]'
-    notification =  EmailNotification( smtp_server="smtp.example.com",  port=587,  username="your_email@example.com",    password="your_password",    recipient_email="recipient@example.com")
+    notification = EmailNotification(
+        smtp_server=SMTP_SERVER,
+        port=PORT,
+        username=USERNAME,
+        password=PASSWORD,
+        recipient_email=RECIPIENT_EMAIL,
+    )
+    
     processor = ProductDataProcessor()
     driver= ChromeWebDriver(proxy)
     driver.requestUrl(base_url,30)
@@ -49,7 +68,7 @@ async def scrape_catalog(
             
             shop_data = ChromeWebDriver.waitUntil(EC.presence_of_element_located((By.XPATH, shop_element_xpath)), 10)
             shop_data = shop_data.encode('ascii', errors='replace').decode()
-            ChromeWebDriver.clickElementByXPath(pagination_xpath)
+            ChromeWebDriver.clickElementByXPath(PAGINATION_XPATH)
             page +=1
             scraped_count += processor.process_and_save(shop_data, DATA_FILE)
            
