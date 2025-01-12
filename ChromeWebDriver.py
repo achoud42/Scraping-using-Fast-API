@@ -134,7 +134,7 @@ class ChromeWebDriver:
     self.printStatus('[' + type(exception).__name__ +':' + method +']: ', exception, self.saveScreenshot(method + '.exception', True))
     traceback.print_exc()
 
-  def requestUrl(self, url, condition = None, timeout = 300):
+  def requestUrl(self, url, timeout = None, condition = None):
     self.stats['request_url'] += 1
     for retries in range(0, 4):
       if not self.driver or retries > 1:
