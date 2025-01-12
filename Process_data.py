@@ -20,6 +20,7 @@ class ProductDataProcessor:
             # Split the raw data into individual products
             products = raw_data.strip().split("\nBuy Now")
             product_data = []
+            product_count = 0
 
             for product in products:
                 # Extract product title
@@ -29,6 +30,7 @@ class ProductDataProcessor:
                 # Extract product price
                 price_match = re.search(r"₹([\d,]+\.?\d*)", product)
                 product_price = float(price_match.group(1).replace(",", "")) if price_match else 0.0
+                product_count +=1
 
 
                 # Add processed data to the list
@@ -41,7 +43,7 @@ class ProductDataProcessor:
             with open(file_name, "w", encoding="utf-8") as f:
                 json.dump(product_data, f, ensure_ascii=False, indent=4)
 
-            print(f"Data has been successfully saved to {file_name}.")
+            return product_count
 
         except Exception as e:
             print(f"An error occurred: {e}")
