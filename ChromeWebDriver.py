@@ -18,6 +18,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import random
 
 
 
@@ -25,23 +26,13 @@ class ChromeWebDriver:
   DRIVER_PATH = '/Downloads/scarping'
   DEBUG_PATH = '/Downloads/scarping/webdriver_debug/'
 
-  def __init__(self, index, proxy):
-    self.index = index
-    self.screenshotCount = 0
-    self.stats = {
-      'request_url': 0,
-      'click_element': 0,
-      'exception': 0
-    }
-    self.paths = {
-      'userdata': self.DEBUG_PATH + 'userdata/' + str(self.index) + '/',
-      'logs': self.DEBUG_PATH + 'logs/' + str(self.index) + '/',
-      'screenshots': self.DEBUG_PATH + 'screenshots/' + str(self.index) + '/'}
+  
+
+  def __init__(self, proxy):
 
     self.driver = None
-    self.port = str(30000 + int(index))
+    self.port = random.randint(1000,10000)
     self.error = None
-    self.usageCount = 0
     self.proxy = proxy
 
     # Configure Proxy Option
@@ -76,7 +67,7 @@ class ChromeWebDriver:
     #chromeOptions.add_argument('--remote-debugging-port=' + self.port)
     chromeOptions.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36')
     chromeOptions.add_argument('--window-size=1280,1024')
-    #chromeOptions.add_argument('--user-data-dir=/home/licensesearch/chrome_data/' + self.port)
+    #chromeOptions.add_argument('--user-data-dir=/Downloads/port/' + self.port)
     chromeOptions.add_argument('--allow-running-insecure-content')
     
     chromeOptions.add_argument("window-size=1200x600")
@@ -97,7 +88,6 @@ class ChromeWebDriver:
             'https': 'https://' + self.proxy,
            # 'no_proxy': 'localhost,127.0.0.1'
         },
-      # 'port': 30000 + int(index)
     }
     print ('Test Selenium Options', options)
     self.driver = webdriver.Chrome(ChromeDriverManager().install(),chrome_options=chromeOptions,seleniumwire_options=options,desired_capabilities=capabilities)
@@ -135,12 +125,9 @@ class ChromeWebDriver:
       except Exception as err:
         continue
 
-  def printStatus(self, message, param1 = '', param2 = ''):
-    print('ChromeWebDriver[' + str(self.index) +']:', message, param1, param2)
+ 
 
-  def reinitialize(self):
-    self.printStatus('reinitializing...')
-    self.initialize()
+  
 
   def handleException(self, method, exception):
     self.stats['exception'] += 1
@@ -311,3 +298,51 @@ class ChromeWebDriver:
   
   def switchtab(self,input):
     return self.driver.switch_to.window(self.driver.window_handles[input])
+    
+  def scroll_down(self, max_scroll_tries=10, step_delay=1, diff_threshold=1000, scroll_pane=None):
+    """
+    Scrolls down a webpage dynamically to load additional content.
+
+    Parameters:
+    - max_scroll_tries: Maximum number of scroll attempts
+    - step_delay: Delay (in seconds) between scroll steps
+    - diff_threshold: Minimum difference in content size to detect new content
+    - scroll_pane: Optional WebElement for a specific scrollable container
+
+    Returns:
+    - True if scrolling loaded new content, False otherwise.
+    """
+    try:
+        before_content =self.driver.page_source
+        scroll_attempts = 0
+        scrolled = False
+
+        while scroll_attempts < max_scroll_tries:
+            scroll_attempts += 1
+            print(f"Scroll attempt {scroll_attempts}...")
+
+            # Scroll logic
+            if scroll_pane:
+                self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", scroll_pane)
+            else:
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+            time.sleep(step_delay)  # Allow time for content to load
+
+            after_content = self.driver.page_source
+            diff_size = len(after_content) - len(before_content)
+
+            print(f"Diff size: {diff_size} | Threshold: {diff_threshold}")
+
+            if diff_size > diff_threshold:
+                before_content = after_content
+                scrolled = True
+                scroll_attempts = 0  # Reset attempts if new content is found
+            else:
+                break
+
+        return scrolled
+
+    except Exception as e:
+        print("Error during scroll_down:", traceback.format_exc())
+        return False
