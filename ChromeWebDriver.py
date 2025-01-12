@@ -208,34 +208,6 @@ class ChromeWebDriver:
     
   
 
-
-  def typeCharacterByXPath(self, xpath, text):
-    try:
-      element = self.driver.find_element(By.XPATH, xpath)
-      for ch in text:
-          element.send_keys(ch)
-          time.sleep(0.15)
-      return True
-    except Exception as error:
-      self.handleException('typeText', error)
-      return ''
-
-  def typeTextByXPath(self, xpath, text):
-    try:
-      element = self.driver.find_element(By.XPATH, xpath)
-      return element.send_keys(text)
-    except Exception as error:
-      self.handleException('typeText', error)
-      return ''
-
-  def clearTextByXPath(self, xpath):
-    try:
-      element = self.driver.find_element(By.XPATH, xpath)
-      return element.clear()
-    except Exception as error:
-      self.handleException('clearText', error)
-      return ''
-
   def execute_script(self, script):
     try:
         self.driver.execute_script(script)
@@ -275,30 +247,12 @@ class ChromeWebDriver:
     except Exception as error:
       return '[error: ' + str(error) + ']';
 
-  def getTitle(self):
-    try:
-      return self.driver.title
-    except Exception as error:
-      self.handleException('getTitle', error)
-      return '';
-
+  
   def getDriver(self):
     return self.driver
 
-  def getStatsSummary(self):
-    return str(self.stats['exception']) + '/' + str(self.stats['request_url'] + self.stats['click_element'])
-
-  def getXhrReponse(self, xhrSearchPath):
-    out = None
-    for request in self.driver.requests:
-      if request.response:
-        if xhrSearchPath in request.url:
-          out = request.response.body
-    return out
-  
-  def switchtab(self,input):
-    return self.driver.switch_to.window(self.driver.window_handles[input])
-    
+ 
+ 
   def scroll_down(self, max_scroll_tries=10, step_delay=1, diff_threshold=1000, scroll_pane=None):
     """
     Scrolls down a webpage dynamically to load additional content.
