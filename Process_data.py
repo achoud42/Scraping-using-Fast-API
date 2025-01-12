@@ -40,7 +40,7 @@ class ProductDataProcessor:
                 })
 
             # Save the data to a JSON file
-            with open(file_name, "w", encoding="utf-8") as f:
+            with open(file_name, "a", encoding="utf-8") as f:
                 json.dump(product_data, f, ensure_ascii=False, indent=4)
 
             return product_count
