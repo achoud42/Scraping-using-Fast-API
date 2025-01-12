@@ -35,13 +35,7 @@ class ChromeWebDriver:
     self.error = None
     self.proxy = proxy
 
-    # Configure Proxy Option
-    prox = Proxy()
-    prox.proxy_type = ProxyType.MANUAL
-
-    # Proxy IP & Port
-    prox.http_proxy = proxy
-    prox.ssl_proxy = proxy
+    
 
     # Configure capabilities
     capabilities = webdriver.DesiredCapabilities.CHROME
@@ -157,33 +151,7 @@ class ChromeWebDriver:
     return None
 
  
-  def clickElement(self, startCondition, endCondition = None, allowUrlRefresh = True, expectNewUrl = True, timeout = 300):
-    self.stats['click_element'] += 1
-    oldUrl = None
-    for retries in (range(0, 5) if allowUrlRefresh else range (0, 1)):
-      try:
-        if not oldUrl:
-          oldUrl = self.driver.current_url # record original URL before click
-        if oldUrl:
-          if retries > 0 and allowUrlRefresh:
-            self.requestUrl(oldUrl)
-          element = self.waitUntil(startCondition)
-          if element:
-            print(self.index, ': clicking...')
-            element.click()
-            print(self.index, ': clicked')
-            if expectNewUrl: # default: URL changes after click
-              print(self.index, ': waiting for url change: ', oldUrl)
-              self.waitUntil(EC.url_changes(oldUrl), timeout)
-              print(self.index, ': new url', self.driver.current_url)
-            if endCondition:
-              print(self.index, ': waiting for end condition')
-              return self.waitUntil(endCondition, timeout)
-            return True
-      except Exception as error:
-        self.handleException('clickElement', error)
-    return False
-
+  
   def getElementAttribute(self, element, attribute):
     try:
       return element.get_attribute(attribute)
@@ -253,50 +221,4 @@ class ChromeWebDriver:
 
  
  
-  def scroll_down(self, max_scroll_tries=10, step_delay=1, diff_threshold=1000, scroll_pane=None):
-    """
-    Scrolls down a webpage dynamically to load additional content.
-
-    Parameters:
-    - max_scroll_tries: Maximum number of scroll attempts
-    - step_delay: Delay (in seconds) between scroll steps
-    - diff_threshold: Minimum difference in content size to detect new content
-    - scroll_pane: Optional WebElement for a specific scrollable container
-
-    Returns:
-    - True if scrolling loaded new content, False otherwise.
-    """
-    try:
-        before_content =self.driver.page_source
-        scroll_attempts = 0
-        scrolled = False
-
-        while scroll_attempts < max_scroll_tries:
-            scroll_attempts += 1
-            print(f"Scroll attempt {scroll_attempts}...")
-
-            # Scroll logic
-            if scroll_pane:
-                self.driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", scroll_pane)
-            else:
-                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
-            time.sleep(step_delay)  # Allow time for content to load
-
-            after_content = self.driver.page_source
-            diff_size = len(after_content) - len(before_content)
-
-            print(f"Diff size: {diff_size} | Threshold: {diff_threshold}")
-
-            if diff_size > diff_threshold:
-                before_content = after_content
-                scrolled = True
-                scroll_attempts = 0  # Reset attempts if new content is found
-            else:
-                break
-
-        return scrolled
-
-    except Exception as e:
-        print("Error during scroll_down:", traceback.format_exc())
-        return False
+  
