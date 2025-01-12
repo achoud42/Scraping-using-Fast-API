@@ -8,6 +8,7 @@ import json
 import uuid
 from ChromeWebDriver import *
 from Process_data import ProductDataProcessor
+from emailNotification import EmailNotification
 # Initialize FastAPI app
 app = FastAPI()
 
@@ -31,9 +32,11 @@ async def scrape_catalog(
     allow_notification_button_xpath = '//*[@id="onesignal-slidedown-allow-button"]'
     shop_element_xpath = '//*[@class="mf-shop-content"]/ul'
     pagination_xpath = '//*[@class="next page-numbers"]'
+    notification =  EmailNotification( smtp_server="smtp.example.com",  port=587,  username="your_email@example.com",    password="your_password",    recipient_email="recipient@example.com")
     processor = ProductDataProcessor()
     driver= ChromeWebDriver(proxy)
     driver.requestUrl(base_url,30)
+    scraped_count =0
     try :
         # to handle allow button notification
         allow_button = ChromeWebDriver.clickElementByXPath(allow_notification_button_xpath)
@@ -48,13 +51,13 @@ async def scrape_catalog(
             shop_data = shop_data.encode('ascii', errors='replace').decode()
             ChromeWebDriver.clickElementByXPath(pagination_xpath)
             page +=1
-            scraped_count = processor.process_and_save(shop_data, DATA_FILE)
+            scraped_count += processor.process_and_save(shop_data, DATA_FILE)
            
     finally:
         # Close the WebDriver
-        driver.close(
-
-    
+        driver.close()
+    message = f"Scraping completed. Total products scraped: {scraped_count}"
+    notification.notify(message)
 
     return {"status": "success", "products_scraped": scraped_count}
 
